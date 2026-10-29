@@ -37,6 +37,33 @@ export async function contactRoutes(fastify: FastifyInstance) {
 
       const ticketId = `SF-${record.id.substring(record.id.length - 6).toUpperCase()}`;
 
+      // Forward inquiry directly to Mandeep's Gmail
+      try {
+        await fetch("https://formsubmit.co/ajax/mandeepsekhon0052@gmail.com", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+          body: JSON.stringify({
+            name,
+            email: normalizeEmail(email),
+            phone: phone || "Not provided",
+            subject: subject || "Inquiry from Sekhon Farm Website",
+            message,
+            ticketId,
+            _subject: `🌾 New Sekhon Farm Inquiry from ${name} [${ticketId}]`,
+            _replyto: normalizeEmail(email),
+            _template: "table",
+            _captcha: "false",
+          }),
+        }).catch((err) => {
+          request.log.warn({ err }, "FormSubmit notification warning");
+        });
+      } catch {
+        // Non-blocking notification dispatch
+      }
+
       return sendSuccess(
         reply,
         {
